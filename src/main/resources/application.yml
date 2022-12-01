@@ -5,7 +5,7 @@ spring:
     allow-circular-references: true
   data:
     mongodb:
-      uri: mongodb://localhost:27017/TodoList
+      uri: mongodb://localhost:27017/BookStore
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
