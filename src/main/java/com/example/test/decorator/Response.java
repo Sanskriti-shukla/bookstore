@@ -17,7 +17,7 @@ public class Response {
     public static Response getOkResponse(String message){
         return  new Response(HttpStatus.OK,message);
     }
-    public  static Response getNoFoundResponse(String message){
+    public  static Response getNotFoundResponse(String message){
         return  new Response(HttpStatus.NOT_FOUND, message);
     }
     public static Response getConflict(String message){
@@ -25,5 +25,18 @@ public class Response {
     }
     public  static Response getInternalServerError(String message){
         return  new Response(HttpStatus.INTERNAL_SERVER_ERROR, message);
+    }
+
+
+    public static Response getAlreadyExists(String message) {
+        return new Response(HttpStatus.BAD_REQUEST,message);
+    }
+
+    public static Response getEmptyResponse(String message) {
+        return  new Response(HttpStatus.BAD_REQUEST,message);
+    };
+
+    public static Response getInvaildResponse(String message) {
+        return  new Response(HttpStatus.BAD_REQUEST,message);
     }
 }

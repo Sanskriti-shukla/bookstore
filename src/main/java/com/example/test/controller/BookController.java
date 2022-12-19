@@ -1,75 +1,56 @@
 package com.example.test.controller;
 
+import com.example.test.common.config.constant.ResponseConstant;
 import com.example.test.decorator.*;
 import com.example.test.service.BookService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpServerErrorException;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/books")
 public class BookController {
-    @Autowired
-    private BookService bookService;
-
-    @RequestMapping(name = "post", value = "addBook", method = RequestMethod.POST)
-    public DataResponse<BookResponse> addBook1(@RequestBody BookAddRequest bookAddRequest) {
+    private final BookService bookService;
+    @RequestMapping(name = "addOrUpdateBook", value = "/books/addOrUpdate", method = RequestMethod.POST)
+    public DataResponse<BookResponse> addOrUpdateBook(@RequestParam(required = false) String id, @RequestBody BookAddRequest bookAddRequest) {
         DataResponse<BookResponse> dataResponse = new DataResponse<>();
-        try {
-            dataResponse.setData(bookService.addBook(bookAddRequest));
-            dataResponse.setStatus(Response.getOkResponse("added successfully"));
-        } catch (HttpServerErrorException.InternalServerError e) {
-            dataResponse.setStatus(Response.getInternalServerError("internal server error"));
-        }
+        dataResponse.setData(bookService.addOrUpdateBook(id, bookAddRequest));
+        dataResponse.setStatus(Response.getOkResponse(ResponseConstant.SAVED));
         return dataResponse;
     }
 
-    @RequestMapping(name = "getBookById", value = "/get/{id}", method = RequestMethod.GET)
-    public DataResponse<BookResponse> getById1(@PathVariable String id) {
+    @RequestMapping(name = "getBookById", value = "/books/get/{id}", method = RequestMethod.GET)
+    public DataResponse<BookResponse> getBookById(@PathVariable String id) {
         DataResponse<BookResponse> dataResponse = new DataResponse<>();
-        try {
-            dataResponse.setData(bookService.getBookById(id));
-            dataResponse.setStatus(Response.getOkResponse("succesfull"));
-        } catch (Exception e) {
-            dataResponse.setStatus(Response.getNoFoundResponse("no id found"));
-        }
+        dataResponse.setData(bookService.getBookById(id));
+        dataResponse.setStatus(Response.getOkResponse(ResponseConstant.OK));
         return dataResponse;
     }
 
-    @RequestMapping(name = "getAll", value = "getAllBook", method = RequestMethod.GET)
+    @RequestMapping(name = "getAllBook", value = "/books/getAllBook", method = RequestMethod.GET)
     public ListResponse<BookResponse> getAllBook() {
         ListResponse<BookResponse> listResponse = new ListResponse<>();
-        try {
-            listResponse.setData(bookService.getAllBook());
-            listResponse.setStatus(Response.getOkResponse("successfull"));
-        } catch (Exception e) {
-            listResponse.setStatus(Response.getConflict("no data found"));
-        }
+        listResponse.setData(bookService.getAllBook());
+        listResponse.setStatus(Response.getOkResponse(ResponseConstant.OK));
+
         return listResponse;
     }
 
-    @RequestMapping(name = "update", value = "UpdateById/{id}", method = RequestMethod.PUT)
-    public DataResponse<Object> updateBook(@PathVariable String id, @RequestBody BookAddRequest bookAddRequest) {
-        DataResponse<Object> dataResponse = new DataResponse<>();
-        try {
-            dataResponse.setData(bookService.bookUpdate(id, bookAddRequest));
-            dataResponse.setStatus(Response.getOkResponse("succesfullly updated with given id" + " " + id));
-        } catch (Exception e) {
-            dataResponse.setStatus(Response.getNoFoundResponse("no id is found"));
-        }
 
+    @RequestMapping(name = "deleteBook", value = "/books/delete/{id}", method = RequestMethod.DELETE)
+    public DataResponse<Object> deleteBook(String id) {
+        DataResponse<Object> dataResponse = new DataResponse<>();
+        bookService.deleteBook(id);
+        dataResponse.setStatus(Response.getOkResponse(ResponseConstant.SUCCESSFULLY_DELETED));
         return dataResponse;
     }
 
-    @RequestMapping(name = "delete", value = "delete/{id}", method = RequestMethod.DELETE)
-    public DataResponse<Object> deleteBook(String id) {
-        DataResponse<Object> dataResponse = new DataResponse<>();
-        try {
-            dataResponse.setData(bookService.bookDelete(id));
-            dataResponse.setStatus(Response.getOkResponse("successfully deleted with given id" + " " + id));
-        } catch (Exception e) {
-            dataResponse.setStatus(Response.getNoFoundResponse("no id found"));
-        }
+    @RequestMapping(name = "getBookByPrice", value = "Book/Price", method = RequestMethod.POST)
+    public ListResponse<BookResponse> getBookByPrice(@RequestBody BookFilter bookFilter) {
+        ListResponse<BookResponse> dataResponse = new ListResponse<>();
+        dataResponse.setData(bookService.getBookByPrice(bookFilter));
+        dataResponse.setStatus(Response.getOkResponse(ResponseConstant.OK));
+
         return dataResponse;
     }
 }

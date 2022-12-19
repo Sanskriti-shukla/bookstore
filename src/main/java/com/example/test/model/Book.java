@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
@@ -15,13 +14,15 @@ import java.util.Date;
 @Data
 @Document(collection = "Book")
 public class Book {
-   @Id
+    @Id
     String id;
-     String bookName;
-      String authorName;
-      Date date= new Date();
-      @JsonIgnore
-    boolean softDelete=false;
-//    boolean softDelete=false;
+    String bookName;
+    Date date = new Date();
+    String price;
+    double discount;
+    Author author;
+    @JsonIgnore
+    boolean softDelete = false;
+
 
 }

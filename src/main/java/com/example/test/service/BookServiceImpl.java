@@ -1,85 +1,84 @@
 package com.example.test.service;
 
+import com.example.test.common.config.constant.MessageConstant;
 import com.example.test.decorator.BookAddRequest;
+import com.example.test.decorator.BookFilter;
 import com.example.test.decorator.BookResponse;
+import com.example.test.common.config.exception.NotFoundException;
+import com.example.test.common.config.exception.NullAwareBeanUtilsBean;
 import com.example.test.model.Book;
 import com.example.test.repository.BookRepo;
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class BookServiceImpl implements BookService {
-    @Autowired
-    BookRepo bookRepo;
-    @Autowired
-    ModelMapper modelMapper;
+
+
+    private final BookRepo bookRepo;
+    private final ModelMapper modelMapper;
+    private final NullAwareBeanUtilsBean nullAwareBeanUtilsBean;
 
     @Override
-    public BookResponse addBook(BookAddRequest bookAddRequest) {
-        Book book = modelMapper.map(bookAddRequest, Book.class);
-        BookResponse bookResponse = modelMapper.map(book, BookResponse.class);
-        book = bookRepo.save(book);
-        return bookResponse;
-    }
-
-    @Override
-    public BookResponse getBookById(String id) throws Exception {
-        Book book = getById(id);
-        if (book != null && book.isSoftDelete() == false) {
-            BookResponse bookResponse = modelMapper.map(book, BookResponse.class);
+    @SneakyThrows
+    public BookResponse addOrUpdateBook(String id, BookAddRequest bookAddRequest) {
+        if (id != null) {
+            Book book = getbyId(id);
+            book.setBookName(bookAddRequest.getBookName());
+            book.setAuthor(bookAddRequest.getAuthor());
+            book.setDate(bookAddRequest.getDate());
+            book.setPrice(bookAddRequest.getPrice());
+            book.setDiscount(bookAddRequest.getDiscount());
+            BookResponse bookResponse = modelMapper.map(bookAddRequest, BookResponse.class);
+            bookRepo.save(book);
             return bookResponse;
         } else {
-            throw new Exception();
+            Book book = modelMapper.map(bookAddRequest, Book.class);
+            BookResponse bookResponse = modelMapper.map(bookAddRequest, BookResponse.class);
+            bookRepo.save(book);
+            return bookResponse;
         }
-
     }
 
+    @SneakyThrows
+    @Override
+    public BookResponse getBookById(String id) {
+        Book book = getbyId(id);
+        BookResponse bookResponse = new BookResponse();
+        nullAwareBeanUtilsBean.copyProperties(bookResponse, book);
+        return bookResponse;
+
+    }
 
     @Override
     public List<BookResponse> getAllBook() {
-        List<Book> books = bookRepo.findAll();
+        List<Book> books = bookRepo.findAllBySoftDeleteFalse();
         List<BookResponse> bookResponses = new ArrayList<>();
-        if (books.size() > 0) {
-            books.forEach(book -> {
-                BookResponse bookResponse = modelMapper.map(book, BookResponse.class);
-                if (book.isSoftDelete() == false)
-                    bookResponses.add(bookResponse);
-            });
-        }
+        books.forEach(book -> {
+            bookResponses.add(modelMapper.map(book, BookResponse.class));
+        });
         return bookResponses;
     }
 
     @Override
-    public Object bookUpdate(String id, BookAddRequest bookAddRequest) {
-        Book book = getById(id);
-        if (book != null && book.isSoftDelete() == false) {
-            book.setBookName(bookAddRequest.getBookName());
-            book.setAuthorName(bookAddRequest.getAuthorName());
-            book.setDate(bookAddRequest.getDate());
-            bookRepo.save(book);
-        }
-        return null;
+    public void deleteBook(String id) {
+        Book book = getbyId(id);
+        book.setSoftDelete(true);
+        bookRepo.save(book);
     }
 
     @Override
-    public Object bookDelete(String id) {
-        Book book = getById(id);
-        if (id != null) {
-//            bookRepo.deleteById(id);
-            book.setSoftDelete(true);
-            bookRepo.save(book);
-        } else {
-            System.out.println("no id found");
-        }
-
-        return null;
+    public List<BookResponse> getBookByPrice(BookFilter bookFilter) {
+        return bookRepo.getBookByPriceAndSoftDeleteFalse(bookFilter);
     }
 
-    public Book getById(String id) {
-        return bookRepo.findById(id).orElseThrow();
+    public Book getbyId(String id) {
+        return bookRepo.getByIdAndSoftDeleteIsFalse(id).orElseThrow(() -> new NotFoundException(MessageConstant.BOOK_NOT_FOUND));
     }
 }
